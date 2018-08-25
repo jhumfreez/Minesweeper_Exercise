@@ -1,8 +1,8 @@
 # Minesweeper Exercise
 
-** Goal: This repo is an exercise to create a minesweeper-like game in various languages (Python3, C, C++, C#, Java), and algorithms (sorting and possibly tile traversal). It is largely just for fun.**
+**Goal: This repo is an exercise to create a minesweeper-like game in various languages (Python3, C, C++, C#, Java), and algorithms (sorting and possibly tile traversal). It is largely just for fun.**
 
-** The pseudocode is as follows:
+**The pseudocode is as follows:**
 *Determine area i x j; store i x j array of tiles with fields to store adjacency to mines, whether they contain mines, whether flagged, and whether they are revealed to the player.
 
 *Plot mines; randomly choose a fair subset of the tiles to store mines
