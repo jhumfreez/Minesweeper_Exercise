@@ -11,10 +11,15 @@
 *Draw the play area: show X's for hidden tiles, F's for flagged tiles (set a maximum), or [number of adjacent mines].
 
 *Player chooses whether to [D]etonate or [F]lag a tile with the coordinate <k><l>
+
 	*Validate input
+
 	*Mine: Gameover
+
 	*Reveal tile adjacency field
+
 		*>=1: Return
+
 		*0: Recursive traversal and reveal of adjacent tiles, return on adjacency field >=1
 
 *Win: All mines flagged
