@@ -12,6 +12,7 @@
 
 import os
 import math
+import random
 import time
 
 class Tile:
@@ -22,11 +23,65 @@ class Tile:
         self.flagged = False
 
 # Count the number of adjacent bombs for each tile; check bomb status field, set adjacency field
-def setAdjacent(map):
+def setAdjacent(map, rows, cols):
+    #Row-major for consistency with other versions
+    for i in range(rows):
+        for j in range(cols):
+            #invalid: index beyond bounds || bomb_status true; else adjacency++
+            if(i-1 >= 0 and j-1 >= 0):
+                if(map[i-1][j-1].bomb_status):
+                    map[i][j].adjacent += 1
+        #[x][ ][ ] x= i-1, j-1
+        #[ ][0][ ]
+        #[ ][ ][ ]
+            if(i-1 >= 0):
+                if(map[i-1][j].bomb_status):
+                    map[i][j].adjacent += 1
+        #[ ][x][ ] x= i-1, j
+        #[ ][0][ ]
+        #[ ][ ][ ]
+            if(i-1 >= 0 and j+1 < cols):
+                if(map[i-1][j+1].bomb_status):
+                    map[i][j].adjacent += 1
+        #[ ][ ][x] x= i-1, j+1
+        #[ ][0][ ]
+        #[ ][ ][ ]
+            if(j-1 >= 0):
+                if(map[i][j-1].bomb_status):
+                    map[i][j].adjacent += 1
+        #[ ][ ][ ] x= i, j-1
+        #[x][0][ ]
+        #[ ][ ][ ]
+            if(j+1 < cols):
+                if(map[i][j+1].bomb_status):
+                    map[i][j].adjacent += 1
+        #[ ][ ][ ] x= i, j+1
+        #[ ][0][x]
+        #[ ][ ][ ]
+            if(i+1 < rows and j-1 >= 0):
+                if(map[i+1][j-1].bomb_status):
+                    map[i][j].adjacent += 1
+        #[ ][ ][ ] x= i+1, j-1
+        #[ ][0][ ]
+        #[x][ ][ ]
+            if(i+1 < rows):
+                if(map[i+1][j].bomb_status):
+                    map[i][j].adjacent += 1
+        #[ ][ ][ ] x= i+1, j
+        #[ ][0][ ]
+        #[ ][x][ ]
+            if(i+1 < rows and j+1 < cols):
+                if(map[i+1][j+1].bomb_status):
+                    map[i][j].adjacent += 1
+        #[ ][ ][ ] x= i+1, j+1
+        #[ ][0][ ]
+        #[ ][ ][x]
     return
 
 # given number of bombs, plants them in random positions on the map (a 2d array of tile objects)
-def plotBombs(bombCount, map):
+def plotBombs(bombCount, map, rows, cols):
+    for b in range(bombCount):
+        map[random.randint(0,rows)][random.randint(0,cols)].bomb_status = True
     return
 
 # prompt area size from user
@@ -40,7 +95,15 @@ def getArea():
 
 # draw i x j map with corresponding symbol in class ([X]hidden, [n]revealed, [F]lagged)
 def drawArea(map):
-
+    #Row-major for consistency with other versions
+    for i in range(rows):
+        for j in range(cols):
+            if map[i][j].hidden:
+                print("X")
+            elif map[i][j].flagged:
+                print("F")
+            else:
+                print(map[i][j].adjacent)
     return
 
 def checkFlag(bombCount, map_tile):
@@ -63,8 +126,44 @@ def checkBomb(map_tile):
         return False
 
 # if revealed bomb has adjacency field of 0, reveal all tiles recursively that connect and are 0 and their non-0 neighbors
-def zeroAdj():
-    return
+def zeroAdj(map, i, j):
+    if((i >= 0 and i < len(map) and (j >= 0 and j < len(map[0])))):
+        map[i][j].hidden = False
+        if map[i][j].adjacent > 1:
+            return
+    #else: recursive call in every adjacent direction
+        zeroAdj(map, i-1, j-1)
+        # [x][ ][ ] x= i-1, j-1
+        # [ ][0][ ]
+        # [ ][ ][ ]
+        zeroAdj(map, i-1, j)
+        # [ ][x][ ] x= i-1, j
+        # [ ][0][ ]
+        # [ ][ ][ ]
+        zeroAdj(map, i-1, j+1)
+        # [ ][ ][x] x= i-1, j+1
+        # [ ][0][ ]
+        # [ ][ ][ ]
+        zeroAdj(map, i, j-1)
+        # [ ][ ][ ] x= i, j-1
+        # [x][0][ ]
+        # [ ][ ][ ]
+        zeroAdj(map, i, j+1)
+        # [ ][ ][ ] x= i, j+1
+        # [ ][0][x]
+        # [ ][ ][ ]
+        zeroAdj(map, i+1, j-1)
+        # [ ][ ][ ] x= i+1, j-1
+        # [ ][0][ ]
+        # [x][ ][ ]
+        zeroAdj(map, i+1, j)
+        # [ ][ ][ ] x= i+1, j
+        # [ ][0][ ]
+        # [ ][x][ ]
+        zeroAdj(map, i+1, j+1)
+        # [ ][ ][ ] x= i+1, j+1
+        # [ ][0][ ]
+        # [ ][ ][x]
 
 #prompt play again: [Y]es/[N]o
 def playAgain():
@@ -82,6 +181,9 @@ def scoreGame(play_time, i, j):
     challenge = i * j
     MAX_TIME = 10000
     timeBonus = MAX_TIME - play_time
+    #make sure score can't < 1
+    if timeBonus < 1:
+        timeBonus = 1
     return (timeBonus) * challenge
 
 # on win: open a highscore file, insert name
@@ -124,14 +226,15 @@ area_tuple = getArea()
 rows = area_tuple[0]
 cols = area_tuple[1]
 bombCount = math.floor((rows * cols)/5)
+#map is a matrix
 map = [[Tile() for j in range(cols)] for i in range(rows)]
-setAdjacent(map)
-plotBombs(bombCount, map)
+setAdjacent(map, rows, cols)
+plotBombs(bombCount, map, rows, cols)
 
-#inner loop until win/lose
+#inner loop until win/lose: all mines flagged or boom
+os.system('cls')  # For Windows
 drawArea(map)
 getCommand()
 #end inner loop
 #end outer loop
 
-os.system('cls')  # For Windows
