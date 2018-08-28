@@ -99,6 +99,7 @@ def getName():
 # pattern: integer+' '+integer, integers < max
 # prompt area size from user, split:'x, '
 def getArea():
+    MIN = 1
     MAX = 15
     #prompt
     choice = input("Enter dimensions of play area (15 max) [l]x[w]: ")
@@ -108,7 +109,7 @@ def getArea():
     if len(choice_list) == 2:
         if(choice_list[0].isnumeric() and choice_list[1].isnumeric()):
             choice_list = [int(i) for i in choice_list]
-            if((choice_list[0] > 1 and choice_list[0] <= MAX) and (choice_list[1] > 1 and choice_list[1] <= MAX)):
+            if((choice_list[0] >= MIN and choice_list[0] <= MAX) and (choice_list[1] >= MIN and choice_list[1] <= MAX)):
                 return choice_list
             else:
                 print("Usage: [l]x[w] --example: 10x10")
@@ -226,38 +227,65 @@ def scoreGame(play_time, i, j):
         timeBonus = 1
     return (timeBonus) * challenge
 
+def printHighscore(dict):
+    print("=====HIGHSCORES=====")
+    for k,v in dict.items():
+        print(k+"\t"+str(v))
+
 # on win: open a highscore file, insert name
 def logScore(name,play_time,i,j):
     score = scoreGame(play_time,i,j)
-    insert = name+"\t"+str(score)
+    line = name+"\t"+str(score)+"\n"
     # open or create highscore file
-    # insert formatted name and time in file
+    file_name = "highscore.log"
+    with open(file_name, 'a+') as log:
+        # insert formatted name and time in file
+        log.write(line)
     # sort file
-    sortLog("highscore.log")
+    sortLog(file_name)
     return
 
 def sortLog(file_name):
     # open highscore log
+ #   log = open(file_name, 'w')
     # make list of name-score pairs
-    # if score list size = 10, remove smallest score
+    top = {}
+
+    with open(file_name) as log:
+        lines = log.read().split("\n")
+
+    for i in lines:
+        pair = re.split("[\t]",i)
+        top[pair[0]] = int(pair[1])
+
+    # if score list size > 10, remove smallest score
+    if len(top) > 10:
+        minpair = min(top, key=top.get)
+        del top[minpair]
     # sort them -- small data set
+    sorted(top.values(), reverse=True)
+    printHighscore(top)
+    log = open(file_name, 'w+')
+    for k,v in top.items():
+        log.write(k+"\t"+str(v))
+    log.close()
     return
 
-
-def bubbleSort(list):
-    n = len(list)
-    for i in range(n):
-        for j in range(0, n-i-1):
-            if list[j][1] > list[j+1][1]:
-                temp = list[j]
-                list[j] = list[j+1]
-                list[j+1] = temp
+# def bubbleSort(dict):
+#     n = len(dict)
+#     for i in range(n):
+#         for j in range(0, n-i-1):
+#             if dict[j][1] > dict[j+1][1]:
+#                 temp = dict[j]
+#                 dict[j] = dict[j+1]
+#                 dict[j+1] = temp
+#     return dict
 
 # win conditions: prompt congrats, prompt name,
 def win(name, start_time, finish_time, rows, cols):
     print("=====YOU WIN!!=====")
     play_time = int(finish_time - start_time)
-    logScore(name, play_time, rows, cols)
+    #logScore(name, play_time, rows, cols)
     return
 
 def lose():
