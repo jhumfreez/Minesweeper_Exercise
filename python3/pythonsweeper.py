@@ -3,10 +3,7 @@
 #   [ ] adding sorting for highscore; see sortLog()
 #   [ ] add file i/o
 #   [ ] cap flag count and flag toggle
-#   [ ] get timings for scoring and sorting performance
-#       Help: https://stackoverflow.com/questions/2866380/how-can-i-time-a-code-segment-for-testing-performance-with-pythons-timeit
-#   [ ] print highscore
-#   [ ] add DEBUG functions for testing timings
+
 
 import os
 import math
