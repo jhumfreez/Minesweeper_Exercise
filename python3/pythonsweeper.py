@@ -1,10 +1,8 @@
 # Author: Josh Humphreys
 # TO DO:
 #   [ ] adding sorting for highscore; see sortLog()
-#   [ ] add user prompts
-#   [ ] add tile traversal; see zeroAdj()
-#       Idea: recursive iteration through every direction; check null, bomb adjacency
-#   [ ] finish writing functions
+#   [ ] add file i/o
+#   [ ] cap flag count and flag toggle
 #   [ ] get timings for scoring and sorting performance
 #       Help: https://stackoverflow.com/questions/2866380/how-can-i-time-a-code-segment-for-testing-performance-with-pythons-timeit
 #   [ ] print highscore
@@ -15,6 +13,8 @@ import math
 import random
 import re
 import time
+from typing import List
+
 
 class Tile:
     def __init__(self):
@@ -23,60 +23,56 @@ class Tile:
         self.hidden = True
         self.flagged = False
 
+def DEBUG_showMap(map,rows,cols):
+    print("Bomb Map")
+    for i in range(rows):
+        #start building list
+        line = []
+        for j in range(cols):
+            if map[i][j].bomb_status:
+                line.append("B ")
+            else:
+                line.append(str(map[i][j].adjacent) + " ")
+        #print
+        print(''.join(str(e) for e in line))
+    return
+
+# def DEBUG_countBombs(map, rows, cols):
+#     bombTotal = 0
+#     for i in range(rows):
+#         for j in range(cols):
+#             if map[i][j].bomb_status:
+#                 bombTotal+=1
+
 # Count the number of adjacent bombs for each tile; check bomb status field, set adjacency field
 def setAdjacent(map, rows, cols):
     #Row-major for consistency with other versions
+
     for i in range(rows):
         for j in range(cols):
-            #invalid: index beyond bounds || bomb_status true; else adjacency++
-            if(i-1 >= 0 and j-1 >= 0):
-                if(map[i-1][j-1].bomb_status):
-                    map[i][j].adjacent += 1
-        #[x][ ][ ] x= i-1, j-1
-        #[ ][0][ ]
-        #[ ][ ][ ]
-            if(i-1 >= 0):
-                if(map[i-1][j].bomb_status):
-                    map[i][j].adjacent += 1
-        #[ ][x][ ] x= i-1, j
-        #[ ][0][ ]
-        #[ ][ ][ ]
-            if(i-1 >= 0 and j+1 < cols):
-                if(map[i-1][j+1].bomb_status):
-                    map[i][j].adjacent += 1
-        #[ ][ ][x] x= i-1, j+1
-        #[ ][0][ ]
-        #[ ][ ][ ]
-            if(j-1 >= 0):
-                if(map[i][j-1].bomb_status):
-                    map[i][j].adjacent += 1
-        #[ ][ ][ ] x= i, j-1
-        #[x][0][ ]
-        #[ ][ ][ ]
-            if(j+1 < cols):
-                if(map[i][j+1].bomb_status):
-                    map[i][j].adjacent += 1
-        #[ ][ ][ ] x= i, j+1
-        #[ ][0][x]
-        #[ ][ ][ ]
-            if(i+1 < rows and j-1 >= 0):
-                if(map[i+1][j-1].bomb_status):
-                    map[i][j].adjacent += 1
-        #[ ][ ][ ] x= i+1, j-1
-        #[ ][0][ ]
-        #[x][ ][ ]
-            if(i+1 < rows):
-                if(map[i+1][j].bomb_status):
-                    map[i][j].adjacent += 1
-        #[ ][ ][ ] x= i+1, j
-        #[ ][0][ ]
-        #[ ][x][ ]
-            if(i+1 < rows and j+1 < cols):
-                if(map[i+1][j+1].bomb_status):
-                    map[i][j].adjacent += 1
-        #[ ][ ][ ] x= i+1, j+1
-        #[ ][0][ ]
-        #[ ][ ][x]
+            #directions
+            directions = [(i - 1, j - 1),  # NW
+                          (i - 1, j),  # N
+                          (i - 1, j + 1),  # NE
+                          (i, j - 1),  # W
+                          (i, j + 1),  # E
+                          (i + 1, j - 1),  # SW
+                          (i + 1, j),  # S
+                          (i + 1, j + 1)]  # SE
+            #precomputed bool values
+            validations = [(i-1 >= 0 and j-1 >= 0),  # NW
+                          (i-1 >= 0),  # N
+                          (i-1 >= 0 and j+1 < cols),  # NE
+                          (j-1 >= 0),  # W
+                          (j+1 < cols),  # E
+                          (i + 1 < rows and j - 1 >= 0),  # SW
+                          (i + 1 < rows),  # S
+                          (i + 1 < rows and j + 1 < cols)]  # SE
+            for k in range(len(directions)):
+                if validations[k]:
+                    if(map[int(directions[k][0])][int(directions[k][1])].bomb_status):
+                        map[i][j].adjacent += 1
+
     return
 
 # given number of bombs, plants them in random positions on the map (a 2d array of tile objects)
@@ -90,6 +86,7 @@ def plotBombs(bombCount, map, rows, cols):
 def trim(str):
     return re.sub(r'[ \t\n]', '-', str)
 
+
 def getName():
     name = input("Enter your name: ")
     if len(name) < 15:
@@ -102,18 +99,26 @@ def getName():
 # pattern: integer+' '+integer, integers < max
 # prompt area size from user, split:'x, '
 def getArea():
-    i,j = 0,0
     MAX = 15
     #prompt
     choice = input("Enter dimensions of play area (15 max) [l]x[w]: ")
     choice_list = re.split("[x ]", choice)
+
     #check input
     if len(choice_list) == 2:
         if(choice_list[0].isnumeric() and choice_list[1].isnumeric()):
-            return choice_list
+            choice_list = [int(i) for i in choice_list]
+            if((choice_list[0] > 1 and choice_list[0] <= MAX) and (choice_list[1] > 1 and choice_list[1] <= MAX)):
+                return choice_list
+            else:
+                print("Usage: [l]x[w] --example: 10x10")
+                return getArea()
+        else:
+            print("Usage: [l]x[w] --example: 10x10")
+            return getArea()
     else:
         print("Usage: [l]x[w] --example: 10x10")
-        getArea()
+        return getArea()
     #bad: prompt usage, recurse
 
 
@@ -135,7 +140,7 @@ def drawArea(map, rows, cols):
     return
 
 def checkFlag(bombCount, map_tile):
-    if map_tile.bomb_status and not map_tile.flagged:
+    if map_tile.bomb_status and map_tile.flagged:
         bombCount -= 1
     return bombCount
 
@@ -165,10 +170,11 @@ def getCommand(map):
     cmd = input("Enter command: ")
     cmd_list = re.split("[x ]",cmd)
     if validateCmd(cmd_list, len(map), len(map[0])):
+        cmd_list = [int(i) for i in cmd_list if i.isnumeric()]
         return cmd_list
     else:
         print("Usage: [B/F] <x> <y>")
-        getCommand(map)
+        return getCommand(map)
 
 # check bomb status, reveal or gameover
 def checkBomb(map_tile):
@@ -179,61 +185,37 @@ def checkBomb(map_tile):
         return False
 
 # if revealed bomb has adjacency field of 0, reveal all tiles recursively that connect and are 0 and their non-0 neighbors
-def zeroAdj(map, i, j):
+# NOTE: REMEMBER THE PREVIOUS DIRECTION OR ELSE WILL JUST KEEP TRAVELING (HITS DEPTH LIMIT)
+def zeroAdj(map, i, j, visited):
     if((i >= 0 and i < len(map) and (j >= 0 and j < len(map[0])))):
         map[i][j].hidden = False
-        if map[i][j].adjacent > 1:
+        if map[i][j].adjacent > 0:
             return
-    #else: recursive call in every adjacent direction
-        zeroAdj(map, i-1, j-1)
-        # [x][ ][ ] x= i-1, j-1
-        # [ ][0][ ]
-        # [ ][ ][ ]
-        zeroAdj(map, i-1, j)
-        # [ ][x][ ] x= i-1, j
-        # [ ][0][ ]
-        # [ ][ ][ ]
-        zeroAdj(map, i-1, j+1)
-        # [ ][ ][x] x= i-1, j+1
-        # [ ][0][ ]
-        # [ ][ ][ ]
-        zeroAdj(map, i, j-1)
-        # [ ][ ][ ] x= i, j-1
-        # [x][0][ ]
-        # [ ][ ][ ]
-        zeroAdj(map, i, j+1)
-        # [ ][ ][ ] x= i, j+1
-        # [ ][0][x]
-        # [ ][ ][ ]
-        zeroAdj(map, i+1, j-1)
-        # [ ][ ][ ] x= i+1, j-1
-        # [ ][0][ ]
-        # [x][ ][ ]
-        zeroAdj(map, i+1, j)
-        # [ ][ ][ ] x= i+1, j
-        # [ ][0][ ]
-        # [ ][x][ ]
-        zeroAdj(map, i+1, j+1)
-        # [ ][ ][ ] x= i+1, j+1
-        # [ ][0][ ]
-        # [ ][ ][x]
+
+        directions = [(i-1, j-1), #NW
+                      (i-1, j), #N
+                      (i-1, j+1), #NE
+                      (i, j-1), #W
+                      (i, j+1), #E
+                      (i+1, j-1), #SW
+                      (i+1, j), #S
+                      (i+1, j+1)] #SE
+        # else: recursive call in every adjacent direction
+        for d in directions:
+            if (d[0], d[1]) not in visited:
+                visited.append(d)
+                zeroAdj(map, d[0], d[1], visited)
 
 #pattern [Yes/Y/No/N]
 #prompt play again: [Y]es/[N]o
 def playAgain():
-    again = False
     while True:
         choice = input("Play Again? [Y]es/[N]o: ")
         if choice[0].lower() == 'y' and len(choice) < 15:
             again = True
-            break
+            return True
         elif choice[0].lower() == 'n' and len(choice) < 15:
-            break
-
-    if again:
-        return True
-    else:
-        return False
+            return False
 
 def scoreGame(play_time, i, j):
     challenge = i * j
@@ -247,6 +229,7 @@ def scoreGame(play_time, i, j):
 # on win: open a highscore file, insert name
 def logScore(name,play_time,i,j):
     score = scoreGame(play_time,i,j)
+    insert = name+"\t"+str(score)
     # open or create highscore file
     # insert formatted name and time in file
     # sort file
@@ -275,7 +258,7 @@ def win(name, start_time, finish_time, rows, cols):
     print("=====YOU WIN!!=====")
     play_time = int(finish_time - start_time)
     logScore(name, play_time, rows, cols)
-    return playAgain()
+    return
 
 def lose():
     print("=====Ka-BOOM! GAME OVER!=====")
@@ -293,39 +276,38 @@ while True:
     #prompt player name
     name = getName()
 
-    area_tuple = getArea()
-    try:
-        rows = int(area_tuple[0])
-        cols = int(area_tuple[1])
-    except TypeError:
-        print("TYPE ERROR:\nCONTENTS OF INPUT: "+str(area_tuple)+"\n")
-        raise
+    area_tuple = getArea()  # type: List[int]
+    rows = area_tuple[0]
+    cols = area_tuple[1]
     bombCount = math.floor((rows * cols)/3)
     #map is a matrix
     map = [[Tile() for j in range(cols)] for i in range(rows)]
-    setAdjacent(map, rows, cols)
     plotBombs(bombCount, map, rows, cols)
+    setAdjacent(map, rows, cols)
     start_time = time.time()
     while True:
         #inner loop until win/lose: all mines flagged or boom
         os.system('clear' if os.name == 'posix' else 'cls')  # For Windows
         drawArea(map, rows, cols)
-        cmd = getCommand(map)
-        x = int(cmd[1])
-        y = int(cmd[2])
+        DEBUG_showMap(map, rows, cols)
+        print("Bombs: "+ str(bombCount))
+        playerInput = getCommand(map)
+        x = playerInput[0] #Type: int
+        y = playerInput[1]
         chosen = map[x][y]
-        if cmd[0] == 'b':
+
+        if playerInput[0] == 'b':
             if (checkBomb(chosen)):
                 lose()
                 break
             elif chosen.adjacent == 0:
-                zeroAdj(map, int(cmd[1]),int(cmd[2]))
+                zeroAdj(map, playerInput[0],playerInput[1],[])
         else:
             chosen.flagged = True
-        #cheat: must set max flags
-        bombCount = checkFlag(bombCount, map[int(cmd[1])][int(cmd[2])])
+        #cheat: flag everything; MUST CAP FLAG COUNT
+        bombCount = checkFlag(bombCount, map[playerInput[0]][playerInput[1]])
         if bombCount < 1:
-            win(start_time, time.time(), rows, cols)
+            win(name, start_time, time.time(), rows, cols)
             break
         #end inner loop
 
