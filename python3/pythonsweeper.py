@@ -2,7 +2,6 @@
 # TO DO:
 #   [ ] adding sorting for highscore; see sortLog()
 #   [ ] add file i/o
-#   [ ] cap flag count and flag toggle
 
 
 import os
@@ -96,7 +95,7 @@ def getName():
 # pattern: integer+' '+integer, integers < max
 # prompt area size from user, split:'x, '
 def getArea():
-    MIN = 1
+    MIN = 5
     MAX = 15
     #prompt
     choice = input("Enter dimensions of play area (15 max) [l]x[w]: ")
@@ -109,7 +108,7 @@ def getArea():
             if((choice_list[0] >= MIN and choice_list[0] <= MAX) and (choice_list[1] >= MIN and choice_list[1] <= MAX)):
                 return choice_list
             else:
-                print("Usage: [l]x[w] --example: 10x10")
+                print("Usage ("+str(MIN)+" min): [l]x[w] --example: 10x10")
                 return getArea()
         else:
             print("Usage: [l]x[w] --example: 10x10")
@@ -126,6 +125,10 @@ def drawArea(map, rows, cols):
     for i in range(rows):
         #start building list
         line = []
+        if i < 9:
+            line.append(str(i + 1) + "|  ")
+        else:
+            line.append(str(i + 1) + "| ")
         for j in range(cols):
             if map[i][j].flagged:
                 line.append("F ")
@@ -156,7 +159,7 @@ def validateCmd(input_list, rows, cols):
             # [1] & [2] must be integer and in bounds!
             i = int(input_list[1])
             j = int(input_list[2])
-            if ((i >= MIN and i < rows) and (j >= MIN and j < cols)):
+            if ((i-1 >= MIN and i-1 < rows) and (j-1 >= MIN and j-1 < cols)):
                 valid = True
 
     return valid
@@ -168,7 +171,7 @@ def getCommand(map):
     cmd = input("Enter command: ")
     cmd_list = re.split("[x ]",cmd)
     if validateCmd(cmd_list, len(map), len(map[0])):
-        cmd_list = [int(i) for i in cmd_list if i.isnumeric()]
+        #cmd_list = [int(i) for i in cmd_list if i.isnumeric()]
         return cmd_list
     else:
         print("Usage: [B/F] <x> <y>")
@@ -304,7 +307,9 @@ while True:
     area_tuple = getArea()  # type: List[int]
     rows = area_tuple[0]
     cols = area_tuple[1]
-    bombCount = math.floor((rows * cols)/3)
+    bombCount = math.floor((rows * cols)/5)
+    flagCount = bombCount
+    MAX_FLAGS = flagCount
     #map is a matrix
     map = [[Tile() for j in range(cols)] for i in range(rows)]
     plotBombs(bombCount, map, rows, cols)
@@ -314,23 +319,33 @@ while True:
         #inner loop until win/lose: all mines flagged or boom
         os.system('clear' if os.name == 'posix' else 'cls')  # For Windows
         drawArea(map, rows, cols)
-        DEBUG_showMap(map, rows, cols)
-        print("Bombs: "+ str(bombCount))
+        #DEBUG_showMap(map, rows, cols)
+        print("Flags: "+ str(flagCount))
         playerInput = getCommand(map)
-        x = playerInput[0] #Type: int
-        y = playerInput[1]
+        action = playerInput[0]
+        playerInput = [int(i) for i in playerInput if i.isnumeric()]
+        x = playerInput[0]-1 #Type: int
+        y = playerInput[1]-1
         chosen = map[x][y]
 
-        if playerInput[0] == 'b':
+        if action == 'b':
             if (checkBomb(chosen)):
                 lose()
                 break
             elif chosen.adjacent == 0:
                 zeroAdj(map, playerInput[0],playerInput[1],[])
-        else:
-            chosen.flagged = True
-        #cheat: flag everything; MUST CAP FLAG COUNT
-        bombCount = checkFlag(bombCount, map[playerInput[0]][playerInput[1]])
+        elif chosen.flagged and chosen.hidden:
+                chosen.flagged = False
+                flagCount += 1
+        elif chosen.hidden:
+            if(flagCount - 1 >= 0):
+                chosen.flagged = True
+                flagCount -= 1
+            else:
+                print("Out of flags? Try retrieving some.")
+
+        # cheat: flag everything; MUST CAP FLAG COUNT
+        bombCount = checkFlag(bombCount, chosen)
         if bombCount < 1:
             win(name, start_time, time.time(), rows, cols)
             break
