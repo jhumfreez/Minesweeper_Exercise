@@ -148,7 +148,7 @@ def checkFlag(bombCount, map_tile):
         bombCount -= 1
     return bombCount
 
-# Pattern: [B/F] <i> <j>
+# Pattern: [D/F] <i> <j>
 def validateCmd(input_list, rows, cols):
     # lower boundary subject change
     LOWER_BOUND = 0
@@ -156,9 +156,9 @@ def validateCmd(input_list, rows, cols):
 
     # length of list must equal 3
     if len(input_list) == 3:
-        # [0] must be 'B' or 'F'
+        # [0] must be 'D' or 'F'
         cmd = input_list[0].lower()
-        if (cmd[0] == 'b' or cmd[0] == 'f') and input_list[1].isnumeric() and input_list[2].isnumeric():
+        if (cmd[0] == 'd' or cmd[0] == 'f') and input_list[1].isnumeric() and input_list[2].isnumeric():
             # [1] & [2] must be integer and in bounds!
             i = int(input_list[1])
             j = int(input_list[2])
@@ -167,7 +167,7 @@ def validateCmd(input_list, rows, cols):
 
     return valid
 
-# Get input from user in form of [B]oom or [F]lag [i][j]
+# Get input from user in form of [D]etonate or [F]lag [i][j]
 # loop on error
 # on boom: check class for bomb status; [n]reveal, bomb: gameover, flag: change presentation symbol
 def getCommand(map):
@@ -178,7 +178,7 @@ def getCommand(map):
         #cmd_list = [int(i) for i in cmd_list if i.isnumeric()]
         return cmd_list
     else:
-        print("Usage: [B/F] <x> <y>")
+        print("Usage: [D/F] <x> <y>")
         return getCommand(map)
 
 # check bomb status, reveal or gameover
@@ -302,7 +302,7 @@ def lose():
 def greeting():
     return "=====Welcome to Pythonsweeper=====\n" + \
             "GOAL: Flag every bomb!\n" + \
-            "Usage: [B]oom/[F]lag [i][j]"
+            "Usage: [D]etonate/[F]lag [i][j]"
 # RUN GAME
 print(greeting())
 
@@ -335,7 +335,7 @@ while True:
         y = playerInput[1]-1
         chosen = map[x][y]
 
-        if action == 'b':
+        if action == 'd':
             if (checkBomb(chosen)):
                 lose()
                 break
