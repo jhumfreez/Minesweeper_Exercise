@@ -1,7 +1,7 @@
 # Author: Josh Humphreys
 # TO DO:
-#   [ ] adding sorting for highscore; see sortLog()
-#   [ ] add file i/o
+#   [ ] add output formatting
+#   [ ] Refactor for readability and edge cases
 
 
 import os
@@ -96,10 +96,13 @@ def getName():
 # prompt area size from user, split:'x, '
 def getArea():
     MIN = 5
+    #DEBUG
+    MIN = 1
     MAX = 15
     #prompt
     choice = input("Enter dimensions of play area (15 max) [l]x[w]: ")
-    choice_list = re.split("[x ]", choice)
+    choice_list = re.split(r'[x ]', choice)
+    choice_list = [str(i) for i in choice_list if i.isalnum()]
 
     #check input
     if len(choice_list) == 2:
@@ -148,7 +151,7 @@ def checkFlag(bombCount, map_tile):
 # Pattern: [B/F] <i> <j>
 def validateCmd(input_list, rows, cols):
     # lower boundary subject change
-    MIN = 0
+    LOWER_BOUND = 0
     valid = False
 
     # length of list must equal 3
@@ -159,7 +162,7 @@ def validateCmd(input_list, rows, cols):
             # [1] & [2] must be integer and in bounds!
             i = int(input_list[1])
             j = int(input_list[2])
-            if ((i-1 >= MIN and i-1 < rows) and (j-1 >= MIN and j-1 < cols)):
+            if ((i-1 >= LOWER_BOUND and i-1 < rows) and (j-1 >= LOWER_BOUND and j-1 < cols)):
                 valid = True
 
     return valid
@@ -169,7 +172,8 @@ def validateCmd(input_list, rows, cols):
 # on boom: check class for bomb status; [n]reveal, bomb: gameover, flag: change presentation symbol
 def getCommand(map):
     cmd = input("Enter command: ")
-    cmd_list = re.split("[x ]",cmd)
+    cmd_list = re.split(r'[x ]',cmd)
+    cmd_list = [str(i) for i in cmd_list  if i.isalnum()]
     if validateCmd(cmd_list, len(map), len(map[0])):
         #cmd_list = [int(i) for i in cmd_list if i.isnumeric()]
         return cmd_list
@@ -185,7 +189,7 @@ def checkBomb(map_tile):
         map_tile.hidden = False
         return False
 
-# if revealed bomb has adjacency field of 0, reveal all tiles recursively that connect and are 0 and their non-0 neighbors
+# if revealed bomb has adjacency field of 0, reveal all tiles recursively that connect and are 0 and non-0 neighbors
 # NOTE: REMEMBER THE PREVIOUS DIRECTION OR ELSE WILL JUST KEEP TRAVELING (HITS DEPTH LIMIT)
 def zeroAdj(map, i, j, visited):
     if((i >= 0 and i < len(map) and (j >= 0 and j < len(map[0])))):
@@ -193,6 +197,7 @@ def zeroAdj(map, i, j, visited):
         if map[i][j].adjacent > 0:
             return
 
+        # Traversal
         directions = [(i-1, j-1), #NW
                       (i-1, j), #N
                       (i-1, j+1), #NE
@@ -201,12 +206,12 @@ def zeroAdj(map, i, j, visited):
                       (i+1, j-1), #SW
                       (i+1, j), #S
                       (i+1, j+1)] #SE
-        # else: recursive call in every adjacent direction
         for d in directions:
             if (d[0], d[1]) not in visited:
                 visited.append(d)
                 zeroAdj(map, d[0], d[1], visited)
-
+    else:
+        return
 #pattern [Yes/Y/No/N]
 #prompt play again: [Y]es/[N]o
 def playAgain():
@@ -225,7 +230,7 @@ def scoreGame(play_time, i, j):
     #make sure score can't < 1
     if timeBonus < 1:
         timeBonus = 1
-    return (timeBonus) * challenge
+    return (timeBonus) + challenge
 
 def printHighscore(dict):
     print("=====HIGHSCORES=====")
@@ -250,13 +255,15 @@ def sortLog(file_name):
  #   log = open(file_name, 'w')
     # make list of name-score pairs
     top = {}
-
-    with open(file_name) as log:
-        lines = log.read().split("\n")
-
-    for i in lines:
-        pair = re.split("[\t]",i)
-        top[pair[0]] = int(pair[1])
+    kvpair = []
+    with open(file_name, 'r') as f:
+        for line in f:
+            kvpair = line.replace("\n", '').split("\t")
+            #linepair[i].strip('\n').split("[\t]",kvpair)
+            #if(len(kvpair)>1):
+            key,value = kvpair[0],int(kvpair[1])
+            top[key] = int(value)
+    f.close()
 
     # if score list size > 10, remove smallest score
     if len(top) > 10:
@@ -265,9 +272,9 @@ def sortLog(file_name):
     # sort them -- small data set
     sorted(top.values(), reverse=True)
     printHighscore(top)
-    log = open(file_name, 'w+')
+    log = open(file_name, 'w')
     for k,v in top.items():
-        log.write(k+"\t"+str(v))
+        log.write(k+"\t"+str(v)+"\n")
     log.close()
     return
 
@@ -285,7 +292,7 @@ def sortLog(file_name):
 def win(name, start_time, finish_time, rows, cols):
     print("=====YOU WIN!!=====")
     play_time = int(finish_time - start_time)
-    #logScore(name, play_time, rows, cols)
+    logScore(name, play_time, rows, cols)
     return
 
 def lose():
@@ -319,7 +326,7 @@ while True:
         #inner loop until win/lose: all mines flagged or boom
         os.system('clear' if os.name == 'posix' else 'cls')  # For Windows
         drawArea(map, rows, cols)
-        #DEBUG_showMap(map, rows, cols)
+        DEBUG_showMap(map, rows, cols)
         print("Flags: "+ str(flagCount))
         playerInput = getCommand(map)
         action = playerInput[0]
@@ -333,7 +340,7 @@ while True:
                 lose()
                 break
             elif chosen.adjacent == 0:
-                zeroAdj(map, playerInput[0],playerInput[1],[])
+                zeroAdj(map, x,y,[])
         elif chosen.flagged and chosen.hidden:
                 chosen.flagged = False
                 flagCount += 1
@@ -341,7 +348,7 @@ while True:
             if(flagCount - 1 >= 0):
                 chosen.flagged = True
                 flagCount -= 1
-            else:
+            elif (bombCount > 0):
                 print("Out of flags? Try retrieving some.")
 
         # cheat: flag everything; MUST CAP FLAG COUNT
