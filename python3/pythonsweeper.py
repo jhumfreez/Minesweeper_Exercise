@@ -2,6 +2,8 @@
 # TO DO:
 #   [ ] add output formatting
 #   [ ] Refactor for readability and edge cases
+#       + Style guide: https://www.python.org/dev/peps/pep-0008/
+#           + Supplement: https://stackoverflow.com/questions/159720/what-is-the-naming-convention-in-python-for-variable-and-function-names
 
 
 import os
