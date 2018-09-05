@@ -1,6 +1,8 @@
 /* 
     Author: Joshua Humphreys
+
     Style Guide(s): https://www.geeksforgeeks.org/java-naming-conventions/
+    DB guide: https://nodehead.com/java-how-to-connect-to-xampps-mysql-in-eclipse/
  */
 
 import java.util.*;
@@ -25,8 +27,8 @@ public class minesweeper {
         
     }
     public static String greeting(){
-        return "=====Welcome to Pythonsweeper=====\n" + \
-            "GOAL: Flag every bomb!\n" + \
+        return "=====Welcome to Pythonsweeper=====\n" + 
+            "GOAL: Flag every bomb!\n" + 
             "Usage: [D]etonate/[F]lag [i][j]";
     }
     public static void lose(){
@@ -40,18 +42,20 @@ public class minesweeper {
     public static void sortLog(String file_name){
         //return 
     }
+	//send to DB
     public static void logScore(String name, int play_time, int i, int j){
         //return 
     }
+	//query from  DB
     public static void printHighscore(HashMap<String, String> dict){
         String msg="=====HIGHSCORES=====";
         //return 
     }
     public static int scoreGame(play_time, i, j){
         int challenge = i * j;
-        const int MAX_TIME = 10000;
+        final int MAX_TIME = 10000;
         int timeBonus = MAX_TIME - play_time;
-        #make sure score can't < 1;
+        //make sure score can't < 1;
         if timeBonus < 1
             timeBonus = 1;
         return (timeBonus) + challenge;
