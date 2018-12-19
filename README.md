@@ -24,4 +24,4 @@
 
 *Win: All mines flagged
 
-On win: Append name of player and score (time bonus * area size) to a sorted highscore log (multiple sorting algorithms will be tested for experimentation) for printing
+On win: Append name of player and score (time bonus * area size) to a sorted highscore log for printing
