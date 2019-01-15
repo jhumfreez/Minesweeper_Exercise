@@ -16,18 +16,18 @@ from typing import List
 
 class Tile:
     def __init__(self):
-        self.bomb_status = False
+        self.mine_status = False
         self.adjacent = 0
         self.hidden = True
         self.flagged = False
 
 def DEBUG_showMap(map,rows,cols):
-    print("Bomb Map")
+    print("Mine Map")
     for i in range(rows):
         #start building list
         line = []
         for j in range(cols):
-            if map[i][j].bomb_status:
+            if map[i][j].mine_status:
                 line.append("B ")
             else:
                 line.append(str(map[i][j].adjacent) + " ")
@@ -35,14 +35,14 @@ def DEBUG_showMap(map,rows,cols):
         print(''.join(str(e) for e in line))
     return
 
-# def DEBUG_countBombs(map, rows, cols):
-#     bombTotal = 0
+# def DEBUG_countMines(map, rows, cols):
+#     mineTotal = 0
 #     for i in range(rows):
 #         for j in range(cols):
-#             if map[i][j].bomb_status:
-#                 bombTotal+=1
+#             if map[i][j].mine_status:
+#                 mineTotal+=1
 
-# Count the number of adjacent bombs for each tile; check bomb status field, set adjacency field
+# Count the number of adjacent mines for each tile; check mine status field, set adjacency field
 def setAdjacent(map, rows, cols):
     #Row-major for consistency with other versions
 
@@ -68,16 +68,16 @@ def setAdjacent(map, rows, cols):
                           (i + 1 < rows and j + 1 < cols)]  # SE
             for k in range(len(directions)):
                 if validations[k]:
-                    if(map[int(directions[k][0])][int(directions[k][1])].bomb_status):
+                    if(map[int(directions[k][0])][int(directions[k][1])].mine_status):
                         map[i][j].adjacent += 1
 
     return
 
-# given number of bombs, plants them in random positions on the map (a 2d array of tile objects)
-def plotBombs(bombCount, map, rows, cols):
-    #print("BOMB COUNT: "+str(bombCount))
-    for b in range(bombCount):
-        map[random.randint(0,rows-1)][random.randint(0,cols-1)].bomb_status = True
+# given number of mines, plants them in random positions on the map (a 2d array of tile objects)
+def plotMines(mineCount, map, rows, cols):
+    #print("BOMB COUNT: "+str(mineCount))
+    for b in range(mineCount):
+        map[random.randint(0,rows-1)][random.randint(0,cols-1)].mine_status = True
     return
 
 # replaces spaces with dashes
@@ -98,8 +98,10 @@ def getName():
 # prompt area size from user, split:'x, '
 def getArea():
     MIN = 5
+    
     #DEBUG
-    MIN = 1
+    MIN = 3
+    
     MAX = 15
     #prompt
     choice = input("Enter dimensions of play area (15 max) [l]x[w]: ")
@@ -145,10 +147,10 @@ def drawArea(map, rows, cols):
         print(''.join(str(e) for e in line))
     return
 
-def checkFlag(bombCount, map_tile):
-    if map_tile.bomb_status and map_tile.flagged:
-        bombCount -= 1
-    return bombCount
+def checkFlag(mineCount, map_tile):
+    if map_tile.mine_status and map_tile.flagged:
+        mineCount -= 1
+    return mineCount
 
 # Pattern: [D/F] <i> <j>
 def validateCmd(input_list, rows, cols):
@@ -171,7 +173,7 @@ def validateCmd(input_list, rows, cols):
 
 # Get input from user in form of [D]etonate or [F]lag [i][j]
 # loop on error
-# on boom: check class for bomb status; [n]reveal, bomb: gameover, flag: change presentation symbol
+# on boom: check class for mine status; [n]reveal, mine: gameover, flag: change presentation symbol
 def getCommand(map):
     cmd = input("Enter command: ")
     cmd_list = re.split(r'[x ]',cmd)
@@ -183,15 +185,15 @@ def getCommand(map):
         print("Usage: [D/F] <x> <y>")
         return getCommand(map)
 
-# check bomb status, reveal or gameover
-def checkBomb(map_tile):
-    if map_tile.bomb_status:
+# check mine status, reveal or gameover
+def checkMine(map_tile):
+    if map_tile.mine_status:
         return True
     else:
         map_tile.hidden = False
         return False
 
-# if revealed bomb has adjacency field of 0, reveal all tiles recursively that connect and are 0 and non-0 neighbors
+# if revealed mine has adjacency field of 0, reveal all tiles recursively that connect and are 0 and non-0 neighbors
 # NOTE: REMEMBER THE PREVIOUS DIRECTION OR ELSE WILL JUST KEEP TRAVELING (HITS DEPTH LIMIT)
 def zeroAdj(map, i, j, visited):
     if((i >= 0 and i < len(map) and (j >= 0 and j < len(map[0])))):
@@ -219,11 +221,12 @@ def zeroAdj(map, i, j, visited):
 def playAgain():
     while True:
         choice = input("Play Again? [Y]es/[N]o: ")
-        if choice[0].lower() == 'y' and len(choice) < 15:
-            again = True
-            return True
-        elif choice[0].lower() == 'n' and len(choice) < 15:
-            return False
+        if choice:
+            if choice[0].lower() == 'y' and len(choice) < 15:
+                again = True
+                return True
+            elif choice[0].lower() == 'n' and len(choice) < 15:
+                return False
 
 def scoreGame(play_time, i, j):
     challenge = i * j
@@ -280,16 +283,6 @@ def sortLog(file_name):
     log.close()
     return
 
-# def bubbleSort(dict):
-#     n = len(dict)
-#     for i in range(n):
-#         for j in range(0, n-i-1):
-#             if dict[j][1] > dict[j+1][1]:
-#                 temp = dict[j]
-#                 dict[j] = dict[j+1]
-#                 dict[j+1] = temp
-#     return dict
-
 # win conditions: prompt congrats, prompt name,
 def win(name, start_time, finish_time, rows, cols):
     print("=====YOU WIN!!=====")
@@ -303,7 +296,7 @@ def lose():
 
 def greeting():
     return "=====Welcome to Pythonsweeper=====\n" + \
-            "GOAL: Flag every bomb!\n" + \
+            "GOAL: Flag every mine!\n" + \
             "Usage: [D]etonate/[F]lag [i][j]"
 # RUN GAME
 print(greeting())
@@ -316,12 +309,12 @@ while True:
     area_tuple = getArea()  # type: List[int]
     rows = area_tuple[0]
     cols = area_tuple[1]
-    bombCount = math.floor((rows * cols)/5)
-    flagCount = bombCount
+    mineCount = math.floor((rows * cols)/5)
+    flagCount = mineCount
     MAX_FLAGS = flagCount
     #map is a matrix
     map = [[Tile() for j in range(cols)] for i in range(rows)]
-    plotBombs(bombCount, map, rows, cols)
+    plotMines(mineCount, map, rows, cols)
     setAdjacent(map, rows, cols)
     start_time = time.time()
     while True:
@@ -338,7 +331,7 @@ while True:
         chosen = map[x][y]
 
         if action == 'd':
-            if (checkBomb(chosen)):
+            if (checkMine(chosen)):
                 lose()
                 break
             elif chosen.adjacent == 0:
@@ -350,12 +343,12 @@ while True:
             if(flagCount - 1 >= 0):
                 chosen.flagged = True
                 flagCount -= 1
-            elif (bombCount > 0):
+            elif (mineCount > 0):
                 print("Out of flags? Try retrieving some.")
 
         # cheat: flag everything; MUST CAP FLAG COUNT
-        bombCount = checkFlag(bombCount, chosen)
-        if bombCount < 1:
+        mineCount = checkFlag(mineCount, chosen)
+        if mineCount < 1:
             win(name, start_time, time.time(), rows, cols)
             break
         #end inner loop
