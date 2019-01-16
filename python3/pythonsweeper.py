@@ -75,7 +75,7 @@ def setAdjacent(map, rows, cols):
 
 # given number of mines, plants them in random positions on the map (a 2d array of tile objects)
 def plotMines(mineCount, map, rows, cols):
-    #print("BOMB COUNT: "+str(mineCount))
+    #print("MINE COUNT: "+str(mineCount))
     for b in range(mineCount):
         map[random.randint(0,rows-1)][random.randint(0,cols-1)].mine_status = True
     return
