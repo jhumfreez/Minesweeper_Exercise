@@ -1,6 +1,6 @@
 # Minesweeper Exercise
 
-**Goal: This repo is an exercise to create a minesweeper-like game in various languages (Python3, C, C++, C#, Java), and algorithms (sorting and possibly tile traversal). It is largely just for fun.**
+**Goal: This repo is an exercise to create a minesweeper-like game in various languages (Python3, C, C++, C#, Java). It is largely just for fun.**
 
 **The pseudocode is as follows:**
 
@@ -24,4 +24,4 @@
 
 *Win: All mines flagged
 
-On win: Append name of player and score (time bonus * area size) to a sorted highscore log (multiple sorting algorithms will be tested for experimentation) for printing
+On win: Append name of player and score to a sorted highscore log for printing
