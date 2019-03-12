@@ -71,14 +71,12 @@ def setAdjacent(map, rows, cols):
                     if(map[int(directions[k][0])][int(directions[k][1])].mine_status):
                         map[i][j].adjacent += 1
 
-    return
-
 # given number of mines, plants them in random positions on the map (a 2d array of tile objects)
 def plotMines(mineCount, map, rows, cols):
     #print("MINE COUNT: "+str(mineCount))
     for b in range(mineCount):
         map[random.randint(0,rows-1)][random.randint(0,cols-1)].mine_status = True
-    return
+
 
 # replaces spaces with dashes
 def trim(str):

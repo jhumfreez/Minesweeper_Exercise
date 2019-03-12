@@ -9,15 +9,15 @@ import java.util.*;
 import java.io.*;
 
 public class Tile{
-        boolean bomb_status;
+        boolean mine_status;
         boolean hidden;
         boolean flagged;
         int adjacent;
     public Tile(){
-        self.bomb_status = false;
-        self.hidden = true;
-        self.flagged = false;
-        self.adjacent = 0;
+        mine_status = false;
+        hidden = true;
+        flagged = false;
+        adjacent = 0;
     }
 }
 //DEFINE TUPLE CLASS
@@ -28,7 +28,7 @@ public class minesweeper {
     }
     public static String greeting(){
         return "=====Welcome to Pythonsweeper=====\n" + 
-            "GOAL: Flag every bomb!\n" + 
+            "GOAL: Flag every mine!\n" + 
             "Usage: [D]etonate/[F]lag [i][j]";
     }
     public static void lose(){
@@ -66,8 +66,8 @@ public class minesweeper {
     public static void zeroAdj(List<Tile> map, int i, int j, List<Tuple<int X,int Y>> visited){
         //return 
     }
-    public static boolean checkBomb(Tile map_tile){
-        if map_tile.bomb_status
+    public static boolean checkMine(Tile map_tile){
+        if map_tile.mine_status
             return true;
         else
             map_tile.hidden = false;
@@ -79,10 +79,10 @@ public class minesweeper {
     public static boolean validateCmd(List<String> input_list, int rows, int cols){
         //return 
     }
-    public static int checkFlag(int bombCount, Tile map_tile){
-        if (map_tile.bomb_status && map_tile.flagged)
-            bombCount -= 1;
-        return bombCount;
+    public static int checkFlag(int mineCount, Tile map_tile){
+        if (map_tile.mine_status && map_tile.flagged)
+            mineCount -= 1;
+        return mineCount;
     }
     public static void drawArea(List<Tile> map,int rows, int cols){
          
@@ -97,11 +97,38 @@ public class minesweeper {
     public static void formatName(String name){
         return name;
     }
-    public static void plotBombs(int bombCount, List<Tile> map, int rows, int cols){
+    public static void plotmines(int mineCount, List<Tile> map, int rows, int cols){
 
     }
     public static void setAdjacent(List<Tile> map, int rows, int cols){
-
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				//directions
+				int directions[][] = {{i - 1, j - 1},  // NW
+							  {i - 1, j},  // N
+							  {i - 1, j + 1},  // NE
+							  {i, j - 1},  // W
+							  {i, j + 1},  // E
+							  {i + 1, j - 1},  // SW
+							  {i + 1, j},  // S
+							  {i + 1, j + 1}};  // SE
+				//precomputed bool values
+				int validations[][] = {{i-1 >= 0 and j-1 >= 0},  // NW
+							  {i-1 >= 0},  // N
+							  {i-1 >= 0 and j+1 < cols},  // NE
+							  {j-1 >= 0},  // W
+							  {j+1 < cols},  // E
+							  {i + 1 < rows and j - 1 >= 0},  // SW
+							  {i + 1 < rows},  // S
+							  {i + 1 < rows and j + 1 < cols}};  // SE
+				for(int k = 0; k < directions.Length; k++){
+					if validations[k]{
+						if(map[int(directions[k][0])][int(directions[k][1])].mine_status)
+							map[i][j].adjacent++;
+					}
+				}
+			}
+		}
     }
     public static void DEBUG_showMap(List<Tile> map, int rows, int cols){
 
